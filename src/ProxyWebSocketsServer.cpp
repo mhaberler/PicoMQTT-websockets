@@ -8,7 +8,7 @@ void ProxyWebSocketsServer::_loop(void) {
                 uint8_t buffer[TOWS_SIZE];
                 int res = d->read(buffer, sizeof(buffer));
                 if ((res > 0) && (_clients[i].status == WSC_CONNECTED)) {
-                    Serial.printf("[%u]-----> toClient %u\n", i, res);
+                    log_d("[%u]-----> toClient %u\n", i, res);
                     this->sendBIN(i, buffer, res);
                 }
             }
@@ -24,7 +24,7 @@ void _proxyWebSocketEvent(WebSocketsServerCore *server, uint8_t num, WStype_t ty
 
     switch(type) {
         case WStype_DISCONNECTED:
-            Serial.printf("[%u] Disconnected\n", num);
+            log_d("[%u] Disconnected\n", num);
             if (wc && wc->connected()) {
                 wc->stop();
                 delete wc;
@@ -35,7 +35,7 @@ void _proxyWebSocketEvent(WebSocketsServerCore *server, uint8_t num, WStype_t ty
 
                 IPAddress ip = wsc->tcp->remoteIP() ;
                 uint16_t port = wsc->tcp->remotePort() ;
-                Serial.printf("[%u] Connected from %d.%d.%d.%d port %u url: %s len=%u\n", num, ip[0], ip[1], ip[2], ip[3], port, payload, length);
+                log_d("[%u] Connected from %d.%d.%d.%d port %u url: %s len=%u\n", num, ip[0], ip[1], ip[2], ip[3], port, payload, length);
 
                 pws->_dest[num] = new WiFiClient;
                 WiFiClient *cp =  pws->_dest[num];
@@ -43,20 +43,21 @@ void _proxyWebSocketEvent(WebSocketsServerCore *server, uint8_t num, WStype_t ty
                 if (!cp->connect(pws->_destHost.c_str(), pws->_destPort, pws->_timeout_ms)) {
                     delete pws->_dest[num] ;
                     pws->_dest[num] = nullptr;
-                    Serial.printf("[%u] proxy connect failed\n", num);
+                    log_d("[%u] proxy connect failed\n", num);
                     break;
                 }
-                Serial.printf("[%u] proxy connect success connected=%d\n", num, cp->connected());
+                log_d("[%u] proxy connect success connected=%d\n", num, cp->connected());
+                cp->setNoDelay(true);
             }
             break;
         case WStype_TEXT:
-            Serial.printf("[%u] get Text: %s\n", num, payload);
+            log_d("[%u] get Text: %s\n", num, payload);
             if (wc && wc->connected()) {
                 wc->write(payload, length);
             }
             break;
         case WStype_BIN:
-            Serial.printf("[%u] get binary length: %u wc->connected=%d payload=%s\n", num, length, wc && wc->connected(), payload);
+            log_d("[%u] get binary length: %u wc->connected=%d payload=%s\n", num, length, wc && wc->connected(), payload);
             if (wc && wc->connected()) {
                 wc->write(payload, length);
             }
@@ -66,7 +67,7 @@ void _proxyWebSocketEvent(WebSocketsServerCore *server, uint8_t num, WStype_t ty
         case WStype_FRAGMENT_BIN_START:
         case WStype_FRAGMENT:
         case WStype_FRAGMENT_FIN:
-            Serial.printf("wsmessage %u\n", type);
+            log_d("wsmessage %u\n", type);
             break;
     }
 }

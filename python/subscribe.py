@@ -1,6 +1,6 @@
 # lookup MQTT-over-websockets broker via MDNS
-# connect & periodically publish a message
-#
+# connect & subscribe to all messages
+
 import socket
 import time
 from zeroconf import ServiceBrowser, Zeroconf
@@ -44,10 +44,6 @@ def on_connect(mqttc, obj, flags, reason_code, properties):
     mqttc.subscribe("#", 0)
 
 
-def on_publish(cclient, userdata, mid, reason_code, properties):
-    print("Message published")
-
-
 def on_message(client, userdata, msg):
     print(msg.topic + " " + str(msg.payload))
 
@@ -72,17 +68,8 @@ client = mqtt.Client(
     clean_session=True,
 )
 client.enable_logger()
-
 client.on_connect = on_connect
 client.on_message = on_message
 client.connect(broker["ip"], broker["port"], 60)
 
-topic = "blah"
-n = 0
-client.loop_start()
-
-while True:
-    client.publish(topic, f"Hello, MQTT! {n}")
-    client.loop()
-    time.sleep(1)
-    n += 1
+client.loop_forever()

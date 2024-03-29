@@ -14,6 +14,9 @@ PicoMQTT::Server mqtt(1883);
 #define PROXY_DEST "127.0.0.1"
 ProxyWebSocketsServer *webSocket;
 
+void webserver_setup(void);
+void webserver_loop(void);
+
 void wsProxyTask(void* pvParameters) {
     Serial.printf("wsProxyTask\n");
     webSocket = new ProxyWebSocketsServer(8883, PROXY_DEST, 1883, 2000);
@@ -26,16 +29,12 @@ void wsProxyTask(void* pvParameters) {
 }
 
 void setup() {
+#ifdef ARDUINO_USB_CDC_ON_BOOT
     delay(3000);
+#endif
     Serial.begin(115200);
 
-    Serial.printf("Connecting to WiFi %s\n", WIFI_SSID);
-    WiFi.mode(WIFI_STA);
-    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(1000);
-    }
-    Serial.printf("WiFi connected, IP: %s\n", WiFi.localIP().toString().c_str());
+    webserver_setup();
     mqtt.subscribe("#", [](const char * topic, const char * payload) {
         Serial.printf("Received message in topic '%s': %s\n", topic, payload);
     });
@@ -45,4 +44,5 @@ void setup() {
 
 void loop() {
     mqtt.loop();
+    webserver_loop();
 }

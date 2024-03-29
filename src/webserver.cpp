@@ -1,6 +1,7 @@
 #include <ESPmDNS.h>
 #include <WebServer.h>
 #include <WiFiMulti.h>
+#include <LittleFS.h>
 
 #include <FS.h>
 #include <LittleFS.h>
@@ -18,10 +19,73 @@ void webserver_loop(void) {
         http_server->handleClient();
 }
 
+String getContentType(String filename) {
+    if (http_server->hasArg("download")) {
+        return "application/octet-stream";
+    } else if (filename.endsWith(".htm")) {
+        return "text/html";
+    } else if (filename.endsWith(".html")) {
+        return "text/html";
+    } else if (filename.endsWith(".css")) {
+        return "text/css";
+    } else if (filename.endsWith(".js")) {
+        return "application/javascript";
+    } else if (filename.endsWith(".png")) {
+        return "image/png";
+    } else if (filename.endsWith(".gif")) {
+        return "image/gif";
+    } else if (filename.endsWith(".jpg")) {
+        return "image/jpeg";
+    } else if (filename.endsWith(".ico")) {
+        return "image/x-icon";
+    } else if (filename.endsWith(".xml")) {
+        return "text/xml";
+    } else if (filename.endsWith(".pdf")) {
+        return "application/x-pdf";
+    } else if (filename.endsWith(".zip")) {
+        return "application/x-zip";
+    } else if (filename.endsWith(".gz")) {
+        return "application/x-gzip";
+    }
+    return "text/plain";
+}
+
+bool exists(String path) {
+    bool yes = false;
+    File file = LittleFS.open(path, "r");
+    if(!file.isDirectory()) {
+        yes = true;
+    }
+    file.close();
+    return yes;
+}
+
+
+bool handleFileRead(String path) {
+
+    if (path.endsWith("/")) {
+        path += "index.htm";
+    }
+    String contentType = getContentType(path);
+    log_i("try %s", path.c_str());
+    File file = LittleFS.open(path, "r");
+    if(file.isDirectory()) {
+        file.close();
+        return false;
+    }
+    http_server->streamFile(file, contentType);
+    file.close();
+    return true;
+}
+
 void webserver_setup(void) {
 
-    log_i("Connecting to WiFi");
+    log_i("mounting LittleFS");
+    // LittleFS.begin(false); // ) "/", 20);
+LittleFS.begin(false,"/littlefs", 10);
 
+
+    log_i("Connecting to WiFi");
     WiFi.mode(WIFI_STA);
     WiFi.enableProv(true);
 
@@ -46,13 +110,12 @@ void webserver_setup(void) {
 
 
     http_server = new WebServer(HTTP_PORT);
-    http_server->on("/", handleRoot);
-    http_server->on("/test.svg", drawGraph);
-    http_server->on("/inline",
-    []() {
-        http_server->send(200, "text/plain", "this works as well");
+    http_server->onNotFound([]() {
+        if (!handleFileRead( // String("/littlefs") +
+                    http_server->uri())) {
+            http_server->send(404, "text/plain", "FileNotFound");
+        }
     });
-    http_server->onNotFound(handleNotFound);
     http_server->begin();
     log_i("HTTP server started\n");
 
@@ -91,32 +154,32 @@ static void drawGraph(void) {
 
 }
 
-static void handleRoot(void) {
+// static void handleRoot(void) {
 
-    char temp[400];
-    int sec = millis() / 1000;
-    int min = sec / 60;
-    int hr = min / 60;
+//     char temp[400];
+//     int sec = millis() / 1000;
+//     int min = sec / 60;
+//     int hr = min / 60;
 
-    snprintf(temp, 400,
-             "<html>\
-  <head>\
-    <meta http-equiv='refresh' content='5'/>\
-    <title>ESP32 Demo</title>\
-    <style>\
-      body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
-    </style>\
-  </head>\
-  <body>\
-    <h1>Hello from ESP32!</h1>\
-    <p>Uptime: %02d:%02d:%02d</p>\
-    <img src=\"/test.svg\" />\
-  </body>\
-</html>",
+//     snprintf(temp, 400,
+//              "<html>\
+//   <head>\
+//     <meta http-equiv='refresh' content='5'/>\
+//     <title>ESP32 Demo</title>\
+//     <style>\
+//       body { background-color: #cccccc; font-family: Arial, Helvetica, Sans-Serif; Color: #000088; }\
+//     </style>\
+//   </head>\
+//   <body>\
+//     <h1>Hello from ESP32!</h1>\
+//     <p>Uptime: %02d:%02d:%02d</p>\
+//     <img src=\"/test.svg\" />\
+//   </body>\
+// </html>",
 
-             hr, min % 60, sec % 60);
-    http_server->send(200, "text/html", temp);
-}
+//              hr, min % 60, sec % 60);
+//     http_server->send(200, "text/html", temp);
+// }
 
 static void handleNotFound(void) {
     String message = "File Not Found\n\n";

@@ -5,12 +5,12 @@ void ProxyWebSocketsServer::_loop(void) {
         WiFiClient *d = _dest[i];
         if (d && d->connected()) {
             while (d->available()) {
-                uint8_t buffer[TOWS_SIZE];
-                int res = d->read(buffer, sizeof(buffer));
+                int res = d->read(_buffer, TOWS_SIZE);
                 if ((res > 0) && (_clients[i].status == WSC_CONNECTED)) {
-                    log_d("[%u]-----> toClient %u", i, res);
-                    this->sendBIN(i, buffer, res);
+                    log_d("[%u] toClient %u bytes", i, res);
+                    this->sendBIN(i, _buffer, res);
                 }
+                yield();
             }
         }
     }

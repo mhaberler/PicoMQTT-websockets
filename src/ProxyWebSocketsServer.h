@@ -1,7 +1,7 @@
 #include "WebSocketsServer.h"
 #include <WiFi.h>
 
-#define TOWS_SIZE 2048
+#define TOWS_SIZE 1536
 
 
 void _proxyWebSocketEvent(WebSocketsServerCore *server, uint8_t num, WStype_t type, uint8_t * payload, size_t length);
@@ -23,8 +23,13 @@ class ProxyWebSocketsServer : public WebSocketsServer {
         _destPort(destPort),
         _timeout_ms(timeout_ms),
         WebSocketsServer(port, origin, protocol) {
+        _buffer = (uint8_t *)malloc(TOWS_SIZE);
         onEvent(_proxyWebSocketEvent);
         begin();
+    }
+    
+    ~ProxyWebSocketsServer() {
+      free(_buffer);
     }
 
     void loop(void) {
@@ -37,6 +42,7 @@ class ProxyWebSocketsServer : public WebSocketsServer {
     String _destHost;
     uint16_t _destPort;
     int32_t _timeout_ms;
+    uint8_t *_buffer;
     WiFiClient *_dest[WEBSOCKETS_SERVER_CLIENT_MAX] = {nullptr};
 };
 

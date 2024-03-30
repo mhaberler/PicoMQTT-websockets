@@ -49,29 +49,34 @@ String getContentType(String filename) {
 bool exists(String path) {
     bool yes = false;
     File file = LittleFS.open(path, "r");
-    if(!file.isDirectory()) {
+    if(!file.isDirectory() && (file.size() > 0)) {
         yes = true;
     }
     file.close();
+    log_i("exists: %s  %d", path.c_str(), yes);
     return yes;
 }
 
 
 bool handleFileRead(String path) {
-
+    log_i("handleFileRead: '%s'", path.c_str());
     if (path.endsWith("/")) {
-        path += "index.htm";
+        path += "index.html";
     }
     String contentType = getContentType(path);
-    log_i("try %s", path.c_str());
-    File file = LittleFS.open(path, "r");
-    if(file.isDirectory()) {
+    String pathWithGz = path + ".gz";
+    if (exists(pathWithGz) || exists(path)) {
+        if (exists(pathWithGz)) {
+            path += ".gz";
+        }
+        File file = LittleFS.open(path, "r");
+        log_i("handleFileRead using '%s' size %u", path.c_str(), file.size());
+
+        http_server->streamFile(file, contentType);
         file.close();
-        return false;
+        return true;
     }
-    http_server->streamFile(file, contentType);
-    file.close();
-    return true;
+    return false;
 }
 
 void webserver_setup(void) {

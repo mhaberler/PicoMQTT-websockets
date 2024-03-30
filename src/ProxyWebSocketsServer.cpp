@@ -7,7 +7,7 @@ void ProxyWebSocketsServer::_loop(void) {
             while (d->available()) {
                 int res = d->read(_buffer, TOWS_SIZE);
                 if ((res > 0) && (_clients[i].status == WSC_CONNECTED)) {
-                    log_d("[%u] toClient %u bytes", i, res);
+                    // log_d("[%u] toClient %u bytes", i, res);
                     this->sendBIN(i, _buffer, res);
                 }
                 yield();

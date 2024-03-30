@@ -9,7 +9,7 @@
 TaskHandle_t wsProxyTask_handle;
 
 PicoMQTT::Server mqtt(1883);
-#define INTERVAL 1000
+#define INTERVAL 3000
 
 #define PROXY_DEST "127.0.0.1"
 ProxyWebSocketsServer *webSocket;
@@ -48,7 +48,7 @@ void loop() {
     // periodically publish CPU temperature
     if (millis() - last > INTERVAL) {
         float t = temperatureRead();
-        String topic = "picomqtt/esp-" + WiFi.macAddress();
+        String topic = "picomqtt/esp-cpu-temperature";
         String message = String(t);
         log_d("Publishing message in topic '%s': %s", topic.c_str(), message.c_str());
         mqtt.publish(topic, message);

@@ -39,6 +39,7 @@ void setup() {
     });
     mqtt.begin();
     xTaskCreate(wsProxyTask,"wsproxy", 16384, nullptr, 1, &wsProxyTask_handle);
+    Serial.printf("sizeof WiFiClient = %u sizeof WSclient_t %u\n", sizeof(WiFiClient), sizeof(WSclient_t));
 }
 
 uint32_t last;

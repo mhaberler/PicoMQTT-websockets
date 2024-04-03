@@ -39,4 +39,8 @@ turns out there is a memory leak, probably in the proxy - this was during a few 
 
 each disconnect looses about 2.2-2.6kB of heap:
 
-![alt text](assets/heap.png)
+![alt text](assets/wsclient.png)
+
+this does not happen when connecting to / disconnecting from the TCP port:
+
+![alt text](assets/tcpclient.png)

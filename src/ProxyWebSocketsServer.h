@@ -27,9 +27,9 @@ class ProxyWebSocketsServer : public WebSocketsServer {
         onEvent(_proxyWebSocketEvent);
         begin();
     }
-    
+
     ~ProxyWebSocketsServer() {
-      free(_buffer);
+        free(_buffer);
     }
 
     void loop(void) {

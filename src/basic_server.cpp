@@ -50,8 +50,9 @@ void loop() {
         float t = temperatureRead();
         String topic = "picomqtt/esp-cpu-temperature";
         String message = String(t);
-        log_d("Publishing message in topic '%s': %s", topic.c_str(), message.c_str());
+        // log_d("Publishing message in topic '%s': %s", topic.c_str(), message.c_str());
         mqtt.publish(topic, message);
+        mqtt.loop();
         
         topic = "esp32/free-heap";
         message = String(esp_get_free_heap_size());

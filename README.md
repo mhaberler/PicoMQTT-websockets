@@ -31,3 +31,12 @@ verified to work:
 
 * MQTT-Explorer 0.3.5
 * MQTTX v1.9.9
+
+
+# tracking heap usage with MQTT explorer
+
+turns out there is a memory leak, probably in the proxy - this was during a few connects and disconnects with a second client (MQTTX)
+
+each disconnect looses about 2.2-2.6kB of heap:
+
+![alt text](assets/heap.png)

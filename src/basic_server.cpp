@@ -18,7 +18,7 @@ void webserver_setup(void);
 void webserver_loop(void);
 
 void wsProxyTask(void* pvParameters) {
-   log_i("wsProxyTask");
+    log_i("wsProxyTask");
     webSocket = new ProxyWebSocketsServer(8883, PROXY_DEST, 1883, 2000);
 
     for (;;) {
@@ -52,6 +52,11 @@ void loop() {
         String message = String(t);
         log_d("Publishing message in topic '%s': %s", topic.c_str(), message.c_str());
         mqtt.publish(topic, message);
+        
+        topic = "esp32/free-heap";
+        message = String(esp_get_free_heap_size());
+        mqtt.publish(topic, message);
+
         last = millis();
     }
 }
